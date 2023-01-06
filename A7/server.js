@@ -11,20 +11,20 @@ app.use(express.json())
 subClient = 
   redis.createClient(
      {url: "redis://redis-17320.c258.us-east-1-4.ec2.cloud.redislabs.com:17320"
-     ,password: "fEsxUnwgy2JIWPe4bJbsnPDJeGOjYQFe"
+     ,password: "XXXXXXXXXXXXXXX"
      }
   );
 client = 
   redis.createClient(
      {url: "redis://redis-17320.c258.us-east-1-4.ec2.cloud.redislabs.com:17320"
-     ,password: "fEsxUnwgy2JIWPe4bJbsnPDJeGOjYQFe"
+     ,password: "XXXXXXXXXXXXXXX"
      }
   );
 
 
 const paypal = require("@paypal/checkout-server-sdk")
-let clientId = "Ab6dHYF_lyeIqZfm1ZNZb-oW5665FCim7toxpFyvJytlkPjB0GG5uTEZWYvuT0kvA7odmw-Zx_hx5-Da";
-let clientSecret = "EJ3cwc4dE-ixrMDZqQAY8bn7zAmx_Si9D3UDvY1Y6p7GoD5ytmuaAARtY-NCprn1HRa2H5pWra-RBOuP";
+let clientId = "XXXXXXXXXXXXXXXXXXX-oW5665FCim7toxpFyvJytlkPjB0GG5uTEZWYvuT0kvA7odmw-Zx_hx5-Da";
+let clientSecret = "XXXXXXXXXXXXXXXXXXXSi9D3UDvY1Y6p7GoD5ytmuaAARtY-NCprn1HRa2H5pWra-RBOuP";
 let environment = new paypal.core.SandboxEnvironment(clientId, clientSecret);
 let paypalClient = new paypal.core.PayPalHttpClient(environment);
 
