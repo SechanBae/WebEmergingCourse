@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!--"StAuth10222: I Sechan Bae, 000803348 certify that this material is my original work. No other person's work has been used without due acknowledgement. I have not made my work available to anyone else."-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        #afterName{
+            display: none;
+            
+        }
+        #auctionInfo{
+            display:none;
+        }
+        #messageRed{
+            color:red;
+        }
+        #messageGreen{
+            color:green;
+        }
+    </style>
+    <title>Document</title>
+</head>
+<body>
+    <div id="beforeName">
+        <form id="nameForm" action="">
+            <label for="name">What is your name? </label>
+            <input type="text" name="name" id="name">
+            <input type="submit" value="submit">
+        </form>
+    </div>
+    <div id="afterName">
+        <h1 id="waiting">Waiting for the next auction to start...</h1>
+        <h1 id="winner"></h1>
+        <div id="auctionInfo">
+            <p id="itemName"></p>
+            <p id="bidder"></p>
+            <p id="price"></p>
+
+            <h1 id="countdown"></h1>
+            <form id="bidForm">
+                <label for="priceBid">Bid Price: </label>
+                <input type="number" name="priceBid" id="priceBid" min="0.01" step="0.01"><br>
+                <input type="hidden" name="bidder" id="bidder">
+                <input type="submit" value="submit" id="bidSubmit">
+            </form>
+            <p id="messageRed"></p>
+            <p id="messageGreen"></p>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        var socket=io();
+        var name="";
+        var highestBidder;
+        var highestBid;
+        //input name for bidder
+        $("#nameForm").submit(function(){
+            $("#beforeName").hide();
+            $("#afterName").show();
+            name=($("#name").val());
+            return false;
+        });
+        //timer for item
+        function startTimer(timer){
+            timer=parseInt(timer);
+            $("#countdown").text(timer);
+            var countDown=setInterval(function(){
+                timer=(timer-1);
+                $("#countdown").text(timer);
+                if(timer==0){
+                    clearInterval(countDown);
+                    $("#countdown").text("");
+                    $("#waiting").show();
+                    $("#auctionInfo").hide();
+                    $("#messageRed").text("");
+                    $("#messageGreen").text("");
+                    $("#winner").text("The winner is : "+highestBidder+" at a bid of "+highestBid);
+                }
+            },1000)
+            
+        }
+        //when bidders recieve new auction
+        socket.on("deliverAuction",function(auctionData){
+            $("#winner").text("");
+            $("#auctionInfo").show();
+            highestBidder=auctionData.highestBidder;
+            highestBid=auctionData.price;
+            $("#itemName").text("Item : "+auctionData.itemName);
+            $("#price").text("Current Bid : "+highestBid);
+            $("#bidder").text("Bidder : "+highestBidder);
+            $("#waiting").hide();
+            startTimer(auctionData.time);
+        });
+        //when bidder submit bid
+        $("#bidForm").submit(function(){
+            let bid=parseInt($("#priceBid").val());
+            if(bid>highestBid){
+                socket.emit("submitBid",
+                {
+                    bidder:name,
+                    price:$("#priceBid").val()
+                });
+                $("#messageGreen").text("Your bid is successful");
+                $("#messageRed").text("");
+            }
+            else{
+                $("#messageGreen").text("");
+                $("#messageRed").text("Your bid is lower than the highest bid");
+            }
+            $("#priceBid").val("");
+            return false;
+        });
+        //when bid has been placed by other bidders
+        socket.on("deliverBidUpdate",function(bidData){
+            highestBidder=bidData.bidder;
+            highestBid=bidData.price;
+            $("#price").text("Current Bid : "+highestBid);
+            $("#bidder").text("Bidder : "+highestBidder);
+        });
+    </script>
+</body>
+</html>

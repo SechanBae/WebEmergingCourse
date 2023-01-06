@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "axios": "^0.27.2",
+    "express": "^4.18.1",
+    "sqlite": "^4.1.2",
+    "sqlite3": "^5.1.1"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test":"node client.js"
+  },
+  "name": "a1",
+  "version": "1.0.0",
+  "main": "server.js",
+  "author": "Sechan Bae 000803348",
+  "license": "ISC",
+  "description": ""
+}

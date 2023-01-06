@@ -1,0 +1,187 @@
+<!--"StAuth10222: I Sechan Bae, 000803348 certify that this material is my original work. No other person's work has been used without due acknowledgement. I have not made my work available to anyone else."-->
+<html>
+<head>
+  <title>Social Media Disaster Monitoring Application</title>
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="https://unpkg.com/vuex@4"></script>
+  <script src="https://unpkg.com/vue-router@4"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <style>
+    body {font-size: 24px;}
+    a {padding: 10px;}
+    td,tr,th,table {
+      border: 2px solid black;
+      padding: 20px;
+      font-size: 32px;
+    }
+    table {border-collapse: collapse;}
+    img{
+      width:100px;
+      height: 100px;
+    }
+    .post{
+      width:65vw;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item active">
+            <router-link class="nav-link" to="/">Home</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/live-feed">Live-Feed</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/analytics">Analytics</router-link>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  <div class="main container">
+    <router-view></router-view>
+  </div>
+  </div>
+<script>
+  var socket = io();
+  const plugin=createWebSocketPlugin=()=>{
+    return (store)=>{
+      socket.on("post",data=>{
+        store.commit('addPost',data);
+        console.log(data.image);
+      })
+    }
+  }
+  const store=Vuex.createStore({
+    state(){
+      return{
+        posts:[]
+      }
+    },
+    mutations:{
+      addPost(state,post){
+        state.posts.push(post);
+      }
+    },
+    getters:{
+      posts:state=>{
+        return state.posts;
+      }
+    },
+    plugins:[plugin()],
+  });
+
+  const app = Vue.createApp({});
+  const home={
+    template:`
+    <h1>Home</h1>
+    <p>This is the home page, the live-feed page features user posts real-time, and the analytics page feature a table of category of posts being updated real-time</p>
+    `,
+  }
+  const liveFeed={
+    template:`
+    <h1>Live Feed</h1>
+    <div v-for="post in posts">
+      <div class="p-2 m-2 border border-secondary rounded mx-auto post">
+          <div class="d-flex align-items-center">
+              <img class="m-2" class="rounded" :src="post.image">
+              <h4 class="m-2">{{post.name}}</h4>
+          </div>
+          <div class="post-body">
+              <h5>Problem: {{post.problem}}</h5>
+              <h5>Priority: {{post.priority}}</h5>
+              <p>{{post.content}}</p>
+          </div>
+      </div>
+    </div>
+    `,
+    computed:{
+      posts(){
+        return this.$store.getters.posts;
+      }
+    }
+  }
+  const analytics={
+    template:`
+    <div>
+      <h1>Analytics</h1>
+      <table class="table table-hover table-bordered ">
+        <tr>
+          <th>Problem/Priority</th>
+          <th>Fire</th>
+          <th>Flood</th>
+          <th>Power</th>
+          <th>Medical</th>
+          <th>Total</th>
+        </tr>
+        <tr>
+          <th>Low</th>
+          <td>{{posts.filter((post)=>post.problem==="Fire"&&post.priority=="Low").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Flood"&&post.priority=="Low").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Power"&&post.priority=="Low").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Medical"&&post.priority=="Low").length}}</td>
+          <td>{{posts.filter((post)=>post.priority=="Low").length}}</td>
+        </tr>
+        <tr>
+          <th>Medium</th>
+          <td>{{posts.filter((post)=>post.problem==="Fire"&&post.priority=="Medium").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Flood"&&post.priority=="Medium").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Power"&&post.priority=="Medium").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Medical"&&post.priority=="Medium").length}}</td>
+          <td>{{posts.filter((post)=>post.priority=="Medium").length}}</td>
+        </tr>
+        <tr>
+          <th>High</th>
+          <td>{{posts.filter((post)=>post.problem==="Fire"&&post.priority=="High").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Flood"&&post.priority=="High").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Power"&&post.priority=="High").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Medical"&&post.priority=="High").length}}</td>
+          <td>{{posts.filter((post)=>post.priority=="High").length}}</td>
+        </tr>
+        <tr>
+          <th>Critical</th>
+          <td>{{posts.filter((post)=>post.problem==="Fire"&&post.priority=="Critical").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Flood"&&post.priority=="Critical").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Power"&&post.priority=="Critical").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Medical"&&post.priority=="Critical").length}}</td>
+          <td>{{posts.filter((post)=>post.priority=="Critical").length}}</td>
+        </tr>
+        <tr>
+          <th>Total</th>
+          <td>{{posts.filter((post)=>post.problem==="Fire").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Flood").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Power").length}}</td>
+          <td>{{posts.filter((post)=>post.problem==="Medical").length}}</td>
+          <td>{{posts.length}}</td>
+        </tr>
+      </table>
+    </div>
+    `,
+    computed:{
+      posts(){
+        return this.$store.getters.posts;
+      }
+    }
+  }
+  const routes=[
+    {path:'/',component:home},
+    {path:'/live-feed',component:liveFeed},
+    {path:'/analytics',component:analytics}
+  ]
+  const router=VueRouter.createRouter({
+    history:VueRouter.createWebHashHistory(),
+    routes,
+  })
+  app.use(router);
+  app.use(store);
+  app.mount("#app");
+</script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>

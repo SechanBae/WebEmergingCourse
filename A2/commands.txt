@@ -1,0 +1,35 @@
+My Discord bot does finance related api calls, it can get you a company's basic information based off its symbol, its price based on the symbol.
+It can also get you real-time currency exchange rates as well as historical currency exchange rates.
+Lastly, it can get you cryptocurrency exchange rates as well.
+
+1.StockInfo [symbol]
+This command takes the symbol of its stock and will return basic information of that company 
+ex. StockInfo AAPL 
+-> 
+AAPL stands for Apple Inc., they are located in CA, United States at One Apple Park Way. and they are part of 
+the Technology sector and Consumer Electronics industry, you can find their website at :https://www.apple.com/
+
+
+2.StockPrice [symbol]
+This command takes the symbol of its stock and will return price of the stock for the past 24H, giving its open,close,high, and low
+ex. StockPrice AAPL 
+-> 
+In the past 24 hours, AAPL stock has opened at $141.69, closed at $144.05. Reaching a high of $144.95 and reaching a low of $141.50
+
+3.CurrencyConverter [from] [to] [amount]
+This command will convert the amount in real time currency exchange rate from your starting currency to your desired currency
+ex. CurrencyConverter CAD USD 1
+->
+1.0000 in Canadian dollar is 0.7266 in United States dollar at the rate of :0.7266
+
+4.HistoricalCurrencyConverter [from] [to] [amount] [dateYYYY-MM-DD]
+This command will convert the amount from your starting currency to your desired currency on the rate of the date specified
+ex. HistoricalCurrencyConverter CAD USD 1 2020-01-01
+->
+On 2020-01-01, 1.0000 in Canadian dollar is 0.7650 in United States dollar at the rate of :0.7650
+
+5. CryptoCurrencyConverter [from] [to]
+This command will give you the exchange rate from the cryptocurrency to the desired currency(can be crypto as well)
+ex.CryptoCurrencyConverter BTC CAD
+->
+The Exchange rate for Bitcoin to Canadian Dollar is 26231.77142090

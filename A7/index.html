@@ -1,0 +1,208 @@
+<!--"StAuth10222: I Sechan Bae, 000803348 certify that this material is my original work. No other person's work has been used without due acknowledgement. I have not made my work available to anyone else." -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment 7</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://www.paypal.com/sdk/js?currency=CAD&client-id=Aadk3LsfsTvsC-nHgRcbPZgQDsb7ql4P_uedqm798f54kgBYGUAf3jgftNefzy5g4yRUQhpzlksCzMU0"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        tr{
+            cursor: pointer;
+        }
+        #confirm{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-8">
+                <h1>List of Items</h1>
+                <table id="items" class="table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Grams</th>
+                            <th>Calories</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-4">
+                <h1>Your Shopping Cart</h1>
+                <table id="cart" class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Grams</th>
+                            <th>Calories</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+                <h5 class="text-right" id="total"></h5>
+                
+                <div id="paypal"></div>
+                <div id="order_details">
+                  <p id="detail_display"></p>
+                  <button class="btn btn-success my-2" id="confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket=io();
+        var itemsArray=[];
+        var cartArray=[];
+        var total=0;
+        const fillTable=(items)=>{
+            items.forEach(item => {
+                var i=JSON.parse(item[1]);
+                itemsArray.push(i);
+            });
+            updateTables();
+        }
+
+        
+        const updateTables=()=>{
+            $('#items tbody').empty();
+            $('#cart tbody').empty();
+            itemsArray.forEach(i=>{
+                $("#items").find('tbody')
+                    .append($('<tr>')
+                        .append($('<td>')
+                            .text(i.type)
+                        )
+                        .append($('<td>')
+                            .text(i.grams)
+                        )
+                        .append($('<td>')
+                            .text(i.calories)
+                        )
+                        .append($('<td>')
+                            .text(i.price)
+                        )
+                        .attr("id",i.id)
+                    )
+            })
+            cartArray.forEach(i=>{
+                $("#cart").find('tbody')
+                    .append($('<tr>')
+                        .append($('<td>')
+                            .text(i.type)
+                        )
+                        .append($('<td>')
+                            .text(i.grams)
+                        )
+                        .append($('<td>')
+                            .text(i.calories)
+                        )
+                        .append($('<td>')
+                            .text(i.price)
+                        )
+                        .attr("id",i.id)
+                    )
+            })
+            $("#items tbody tr").on("click", function() {
+                var id = $(this).attr("id");
+                var index=itemsArray.findIndex(i=>i.id==id);
+                cartArray.push(itemsArray[index]);
+                itemsArray.splice(index,1);
+                updateTables();
+            });
+            $("#cart tbody tr").on("click", function() {
+                var id = $(this).attr("id");
+                var index=cartArray.findIndex(i=>i.id==id);
+                itemsArray.push(cartArray[index]);
+                cartArray.splice(index,1);
+                updateTables();
+            });
+            total=0;
+            cartArray.forEach(item => {
+                total+=item.price;
+            });
+            $("#total").text("Total: "+total);
+            console.log(JSON.stringify(cartArray));
+        }
+
+
+        socket.emit("enterPage",{});
+        socket.on("getAllItems",(data)=>{
+            fillTable(data);
+        });
+        socket.on("getSingleItem",(data)=>{
+            itemsArray.push(JSON.parse(data))
+            updateTables();
+        })
+
+        paypal
+      .Buttons({
+        createOrder: function () {
+          return fetch("/create-order", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({cartArray}),
+          })
+            .then(res => {
+              if (res.ok) return res.json()
+              return res.json().then(json => Promise.reject(json))
+            })
+            .then(({ id }) => {
+              return id
+            })
+            .catch(e => {
+              console.error(e.error)
+            })
+        },
+        onApprove: function (data, actions) {
+          return actions.order.get().then(function (orderDetails) {
+            $("#order_details").show();
+            $("#confirm").show();
+            var items=orderDetails.purchase_units[0].items;
+            var itemsText="";
+            console.log(orderDetails);
+            for(const item of items){
+                itemsText+="<strong>Item</strong>: "+item.name+" <strong>Quantity</strong>: "+item.quantity+" <strong>Price</strong>: "+item.unit_amount.value+"<br>"
+            }
+            var total="<strong>Total</strong>: "+orderDetails.purchase_units[0].amount.value+"<br>";
+            var addressInformation="Address: "+orderDetails.purchase_units[0].shipping.address.address_line_1+"\nCity: "+orderDetails.purchase_units[0].shipping.address.admin_area_2+"\nProvince: "+orderDetails.purchase_units[0].shipping.address.admin_area_1+"\nCountry: "+orderDetails.purchase_units[0].shipping.address.country_code+"\n Postal Code: "+orderDetails.purchase_units[0].shipping.address.postal_code
+            console.log(itemsText+total+addressInformation);
+            $("#detail_display").html(itemsText+total+addressInformation);
+            $("#confirm").click(function(){
+                return actions.order.capture().then(function () {
+                cartArray=[];
+                updateTables();
+                $("#order_details").hide();
+                $("#confirm").hide();
+                alert('Transaction complete!');
+                });
+            })
+            });
+          }
+
+        })
+      .render("#paypal")
+    </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+
+</html>
